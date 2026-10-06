@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Reality Training - Micro Learning</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0A1413">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Reality Training">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  /* ===== WHITE LABEL COLORS — Reality Training dark theme ===== */
+  :root {
+    --bg: #0A1413; --surface: #0F1F1E; --surface-2: #163331; --ink: #EEF6F5;
+    --ink-soft: #9FC2C0; --ink-muted: #5E8381; --accent: #54A6A7; --accent-2: #3D8485;
+    --accent-text: #7FCFD0; --accent-soft: rgba(84,166,167,0.14); --good-bg: rgba(84,166,167,0.14);
+    --good-text: #7FCFD0; --bad-bg: rgba(220,80,60,0.14); --bad-text: #FF6B57; --red: #FF6B57;
+    --line: #1E3937; --gold: #FBBF24; --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); height: 100%; }
+  #app-shell { max-width: 420px; margin: 24px auto; background: var(--surface); border-radius: 28px; border: 1px solid var(--line); height: calc(100dvh - 48px); display: flex; flex-direction: column; overflow: hidden; }
+  .tab-screen-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  @media (max-width: 480px) {
+    #app-shell { margin: 0 auto; height: 100dvh; border-radius: 0; border: none; max-width: 100%; padding-top: env(safe-area-inset-top); }
+  }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 8px; }
+  .topbar .icon-btn { font-size: 20px; color: var(--ink-soft); cursor: pointer; width: 24px; text-align: center; background: none; border: none; }
+  .topbar .label { font-size: 13px; color: var(--ink-muted); }
+  .pill { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .pill-streak { background: rgba(251,191,36,0.12); color: var(--gold); }
+  .pill-xp { background: var(--accent-soft); color: var(--accent-text); }
+  .mode-link { font-size: 11px; color: var(--ink-muted); text-decoration: underline; cursor: pointer; background: none; border: none; }
+  .screen { padding: 4px 20px 20px; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; }
+  .eyebrow { font-size: 12px; color: var(--accent-text); font-weight: 700; margin: 0 0 4px; letter-spacing: 0.03em; text-transform: uppercase; }
+  h1 { font-size: 20px; margin: 0 0 4px; font-weight: 700; }
+  h2 { font-size: 16px; margin: 0 0 10px; font-weight: 700; }
+  .subtitle { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 14px; }
+  .hero-card { background: linear-gradient(135deg, var(--accent-2), var(--accent)); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; color: #06211F; cursor: pointer; }
+  .hero-card .hicon { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.35); display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+  .hero-card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+  .hero-card .meta { font-size: 12px; opacity: 0.85; display: flex; gap: 12px; }
+  .card { background: var(--surface-2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--line); }
+  .card-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--accent-text); margin-bottom: 8px; justify-content: space-between; }
+  .card p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+  .option-btn { width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; color: var(--ink); cursor: pointer; }
+  .option-btn.correct { background: var(--good-bg); border-color: var(--good-text); color: var(--good-text); }
+  .option-btn.incorrect { background: var(--bad-bg); border-color: var(--bad-text); color: var(--bad-text); }
+  .option-btn:disabled { cursor: default; }
+  .primary-btn { width: 100%; padding: 14px; background: var(--accent); color: #06211F; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: auto; }
+  .primary-btn:disabled { background: var(--surface-2); color: var(--ink-muted); cursor: not-allowed; }
+  .secondary-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--line); color: var(--ink-soft); border-radius: 12px; font-size: 13px; cursor: pointer; margin-top: 10px; }
+  .mission-card { background: var(--accent-soft); border: 1px solid rgba(45,212,191,0.35); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+  .mission-card textarea { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); padding: 10px 12px; font-size: 13px; font-family: inherit; margin-top: 10px; resize: vertical; min-height: 60px; }
+  .course-card { display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; cursor: pointer; }
+  .course-card .icon-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .course-card .title { font-size: 14.5px; font-weight: 700; margin: 0 0 4px; }
+  .course-card .sub { font-size: 12px; color: var(--ink-soft); margin: 0; }
+  .mini-track { height: 4px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+  .mini-fill { height: 100%; background: var(--accent); }
+  .level-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+  .level-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .level-track { height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+  .level-fill { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+  .tabbar { display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)) 0; border-top: 1px solid var(--line); background: var(--surface); }
+  .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--ink-muted); cursor: pointer; font-size: 9.5px; }
+  .tab.active { color: var(--accent-text); }
+  .tab .glyph { font-size: 18px; }
+  .journey-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; margin-bottom: 8px; }
+  .journey-row.done { background: var(--accent-soft); }
+  .journey-row.current { background: var(--surface-2); border: 1.5px solid var(--accent); }
+  .journey-row.locked { opacity: 0.45; }
+  .journey-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; background: var(--surface); }
+  .journey-row.done .journey-dot, .journey-row.current .journey-dot { background: var(--accent); color: #06211F; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 10px 0 14px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; background: var(--surface); color: var(--ink-muted); }
+  .cal-cell.lesson { background: rgba(45,212,191,0.18); color: var(--accent-text); font-weight: 700; }
+  .cal-cell.today { border: 1.5px solid var(--accent); }
+  .cal-head { font-size: 10px; color: var(--ink-muted); text-align: center; }
+  .badge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .badge-tile { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; text-align: center; }
+  .badge-tile.locked { opacity: 0.35; }
+  .badge-tile .bicon { font-size: 24px; margin-bottom: 6px; }
+  .badge-tile .bname { font-size: 12px; font-weight: 700; margin: 0 0 2px; }
+  .badge-tile .bdesc { font-size: 10.5px; color: var(--ink-soft); margin: 0; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-tile { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+  .stat-tile .slabel { font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 4px; }
+  .stat-tile .sval { font-size: 20px; font-weight: 700; margin: 0; }
+  .lb-toggle { display: flex; gap: 8px; margin-bottom: 14px; }
+  .lb-toggle button { flex: 1; padding: 9px; font-size: 12.5px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink-soft); cursor: pointer; }
+  .lb-toggle button.active { background: var(--accent); color: #06211F; border-color: var(--accent); font-weight: 700; }
+  .lb-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 6px; }
+  .lb-row.me { background: var(--accent-soft); border-color: var(--accent); }
+  .lb-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--surface); font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent-2); color: #06211F; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .lb-name { font-size: 13px; font-weight: 700; margin: 0; }
+  .lb-sub { font-size: 11px; color: var(--ink-soft); margin: 0; }
+  .lb-score { font-size: 13px; font-weight: 700; color: var(--accent-text); }
+  .center-text { text-align: center; }
+  .empty { color: var(--ink-muted); font-size: 13px; text-align: center; padding: 30px 0; }
+  .login-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px; }
+  .login-wrap input { width: 100%; padding: 14px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 12px; font-size: 15px; margin-bottom: 12px; }
+  .status-text { font-size: 13px; color: var(--ink-soft); text-align: center; margin-top: 12px; }
+  .install-full-btn { width: 100%; background: var(--surface-2); color: var(--accent-text); border: 1px solid var(--accent); border-radius: 12px; padding: 11px 14px; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .compose-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; display: flex; gap: 10px; align-items: center; }
+  .compose-card input { flex: 1; background: var(--surface); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+  .compose-card button { background: none; border: none; color: var(--accent-text); font-weight: 700; font-size: 13px; cursor: pointer; }
+  .filter-scroll { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; padding-bottom: 4px; }
+  .filter-chip { white-space: nowrap; padding: 7px 14px; border-radius: 20px; font-size: 12px; background: var(--surface-2); color: var(--ink-soft); border: 1px solid var(--line); cursor: pointer; }
+  .filter-chip.active { background: var(--accent); color: #06211F; border-color: var(--accent); font-weight: 700; }
+  .post-card { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  .post-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .post-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-2); color: #06211F; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .post-name { font-size: 12.5px; font-weight: 700; }
+  .post-text { font-size: 13.5px; line-height: 1.5; margin: 0 0 8px; }
+  .like-btn { background: none; border: none; color: var(--ink-soft); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+</style>
+</head>
+<body>
+<div id="app-shell"></div>
+
+<script>
+// ============================================================
+// WHITE LABEL CONFIG -- edit this block to rebrand for a client.
+// Colors live in the :root CSS block near the top of this file,
+// under the comment "WHITE LABEL COLORS".
+// ============================================================
+const BRAND_NAME = "Reality Training";
+// LOGO is set below (kept separate since it is a long data string)
+// ============================================================
+
+const SUPABASE_URL = "https://iwcuavrsflbzazagdatp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_x-g_E4BKQ1ApHxMiq06sYA_XsMe1H2K";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+document.title = BRAND_NAME + " - Micro Learning";
+
+// ---- Install prompt handling ----
+let deferredInstallPrompt = null;
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+}
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+const LOGO = "data:image/png;base64,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";
+
+const LEVEL_TIERS = [
+  { name: "Rookie", min: 0 },
+  { name: "Apprentice", min: 200 },
+  { name: "Practitioner", min: 500 },
+  { name: "Expert", min: 1000 },
+  { name: "Master", min: 2000 }
+];
+
+function achievementEarned(a) {
+  if (a.rule_type === "streak") return state.streak >= a.rule_value;
+  if (a.rule_type === "mission_count") return Object.values(state.progressMap).filter(m => m.mission_done).length >= a.rule_value;
+  if (a.rule_type === "quiz_count") return Object.values(state.progressMap).filter(m => m.selected_index !== undefined && m.selected_index !== null).length >= a.rule_value;
+  if (a.rule_type === "course_complete") {
+    const c = state.courses[a.rule_course_id];
+    return !!(c && c.modules.length > 0 && c.modules.every(m => state.progressMap[m.id] && state.progressMap[m.id].mission_done));
+  }
+  if (a.rule_type === "discussion_count") return (state.myDiscussionCount || 0) >= a.rule_value;
+  return false;
+}
+async function loadAchievements() {
+  const { data } = await sb.from("achievements").select("*").order("created_at");
+  state.achievements = data || [];
+}
+async function loadMyDiscussionCount() {
+  const { count } = await sb.from("discussion_posts").select("id", { count: "exact", head: true }).eq("user_id", state.user.id);
+  state.myDiscussionCount = count || 0;
+}
+
+let state = {
+  screen: "loading", user: null, courses: {}, progressMap: {}, streak: 0, longestStreak: 0,
+  courseId: null, moduleIndex: 0, answered: false, selected: null, missionText: "",
+  leaderboard: [], loginStatus: "", activeTab: "home", loginStep: "email", pendingEmail: "",
+  feedPosts: [], feedFilter: "all", feedDraft: "", lbMode: "individuals", lbCourseFilter: "overall",
+  achievements: [], myDiscussionCount: 0, discussionPosts: [], discussionDraft: "", replyDraft: {}, replyOpenFor: null
+};
+let alreadyLoaded = false;
+
+async function init() {
+  state.screen = "loading"; render();
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (session) {
+      state.user = session.user;
+      if (!alreadyLoaded || event === "SIGNED_IN") { alreadyLoaded = true; await loadEverything(); }
+    } else if (event !== "INITIAL_SESSION") {
+      state.screen = "login"; state.user = null; alreadyLoaded = false; render();
+    }
+  });
+  setTimeout(() => { if (state.screen === "loading" && !alreadyLoaded) { state.screen = "login"; render(); } }, 2500);
+}
+
+async function loadEverything() {
+  state.screen = "loading"; render();
+  await sb.from("profiles").upsert({ id: state.user.id, email: state.user.email }, { onConflict: "id", ignoreDuplicates: false });
+  const { data: courseRows } = await sb.from("courses").select("*").order("sort_order");
+  const { data: moduleRows } = await sb.from("modules").select("*").order("sort_order");
+  const courses = {};
+  (courseRows || []).forEach(c => { courses[c.id] = { title: c.title, icon: c.icon, modules: [] }; });
+  (moduleRows || []).forEach(m => {
+    if (courses[m.course_id]) {
+      courses[m.course_id].modules.push({ id: m.id, title: m.title, read: m.read_content, readTime: m.read_time, tip: m.tip,
+        quiz: { question: m.quiz_question, options: m.quiz_options, correct: m.quiz_correct_index,
+          type: m.question_type || "multiple_choice", correctIndices: m.quiz_correct_indices, pairs: m.match_pairs } });
+    }
+  });
+  state.courses = courses;
+  const { data: progressRows } = await sb.from("module_progress").select("*").eq("user_id", state.user.id);
+  const progressMap = {};
+  (progressRows || []).forEach(r => { progressMap[r.module_id] = r; });
+  state.progressMap = progressMap;
+  const { data: streakRow } = await sb.from("streaks").select("*").eq("user_id", state.user.id).maybeSingle();
+  state.streak = streakRow ? streakRow.current_streak : 0;
+  state.longestStreak = streakRow ? streakRow.longest_streak : 0;
+
+  const { data: myMemberships } = await sb.from("group_members").select("group_id").eq("user_id", state.user.id);
+  state.userGroupIds = (myMemberships || []).map(m => m.group_id);
+  const { data: assignmentRows } = await sb.from("assignments").select("*");
+  state.assignments = assignmentRows || [];
+
+  state.screen = "home"; state.activeTab = "home"; render();
+}
+
+// Returns null if nothing has been assigned yet system-wide (show everything, back-compat),
+// otherwise a Set of course_ids actually assigned to this learner (directly or via a group).
+function getAssignedCourseIds() {
+  if (!state.assignments || state.assignments.length === 0) return null;
+  const ids = new Set();
+  state.assignments.forEach(a => {
+    if (a.user_id === state.user.id) ids.add(a.course_id);
+    else if (a.group_id && state.userGroupIds.includes(a.group_id)) ids.add(a.course_id);
+  });
+  return ids;
+}
+function visibleFlatModules() {
+  const assignedIds = getAssignedCourseIds();
+  const flat = flatModules();
+  return assignedIds === null ? flat : flat.filter(m => assignedIds.has(m.courseId));
+}
+function visibleCourseIds() {
+  const assignedIds = getAssignedCourseIds();
+  return assignedIds === null ? Object.keys(state.courses) : Object.keys(state.courses).filter(id => assignedIds.has(id));
+}
+// A module unlocks the calendar day after the one before it was completed, so a course
+// can't be finished in one sitting. The first module in the sequence is always open.
+function isModuleUnlocked(index, flat) {
+  if (index <= 0) return true;
+  const prev = flat[index - 1];
+  const prevProgress = state.progressMap[prev.id];
+  if (!prevProgress || !prevProgress.mission_done) return false;
+  if (!prevProgress.mission_completed_at) return true; // older data with no timestamp, don't block on it
+  const completedDate = prevProgress.mission_completed_at.slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  return completedDate < today;
+}
+
+async function sendLoginCode(email) {
+  state.loginStatus = "Sending code..."; render();
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  if (error) { state.loginStatus = "Something went wrong, try again."; render(); return; }
+  state.pendingEmail = email;
+  state.loginStep = "code";
+  state.loginStatus = "";
+  render();
+}
+async function verifyLoginCode(code) {
+  if (!code || code.trim().length < 4) { state.loginStatus = "Enter the code from your email."; render(); return; }
+  state.loginStatus = "Checking..."; render();
+  const { error } = await sb.auth.verifyOtp({ email: state.pendingEmail, token: code.trim(), type: "email" });
+  if (error) { state.loginStatus = "That code didn't work, check it and try again, or request a new one."; render(); }
+  // On success, onAuthStateChange picks up the session automatically.
+}
+
+async function saveQuizAnswer(moduleId, selectedIndex, correct) {
+  await sb.from("module_progress").upsert({ user_id: state.user.id, module_id: moduleId, selected_index: selectedIndex, correct }, { onConflict: "user_id,module_id" });
+  state.progressMap[moduleId] = { ...(state.progressMap[moduleId] || {}), selected_index: selectedIndex, correct };
+  await updateStreak();
+}
+async function saveMission(moduleId, reflection) {
+  const now = new Date().toISOString();
+  await sb.from("module_progress").upsert({ user_id: state.user.id, module_id: moduleId, mission_done: true, mission_reflection: reflection, mission_completed_at: now }, { onConflict: "user_id,module_id" });
+  state.progressMap[moduleId] = { ...(state.progressMap[moduleId] || {}), mission_done: true, mission_reflection: reflection, mission_completed_at: now };
+}
+async function updateStreak() {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: existing } = await sb.from("streaks").select("*").eq("user_id", state.user.id).maybeSingle();
+  let newStreak = 1;
+  if (existing && existing.last_active_date) {
+    const last = existing.last_active_date;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    if (last === today) newStreak = existing.current_streak;
+    else if (last === yesterday) newStreak = existing.current_streak + 1;
+    else newStreak = 1;
+  }
+  const longest = existing ? Math.max(existing.longest_streak || 0, newStreak) : newStreak;
+  await sb.from("streaks").upsert({ user_id: state.user.id, current_streak: newStreak, longest_streak: longest, last_active_date: today }, { onConflict: "user_id" });
+  state.streak = newStreak; state.longestStreak = longest;
+}
+async function loadLeaderboard() {
+  if (state.lbCourseFilter === "overall") {
+    const { data } = await sb.from("leaderboard").select("*").order("modules_completed", { ascending: false });
+    state.leaderboard = data || [];
+  } else {
+    const { data } = await sb.from("course_leaderboard").select("*").eq("course_id", state.lbCourseFilter).order("modules_completed", { ascending: false });
+    state.leaderboard = data || [];
+  }
+}
+async function loadFeed() {
+  const { data } = await sb.from("feed_posts").select("*, profiles(full_name, email)").order("created_at", { ascending: false });
+  state.feedPosts = data || [];
+}
+async function postToFeed(content) {
+  if (!content.trim()) return;
+  await sb.from("feed_posts").insert({ user_id: state.user.id, content: content.trim(), course_id: state.courseId || null });
+  state.feedDraft = "";
+  await loadFeed(); render();
+}
+async function likePost(post) {
+  await sb.from("feed_posts").update({ likes_count: (post.likes_count || 0) + 1 }).eq("id", post.id);
+  post.likes_count = (post.likes_count || 0) + 1; render();
+}
+
+function computeXP() {
+  let xp = 0;
+  Object.values(state.progressMap).forEach(m => { if (m.selected_index !== undefined && m.selected_index !== null) xp += 100; if (m.mission_done) xp += 50; });
+  return xp;
+}
+function levelInfo(xp) {
+  let current = LEVEL_TIERS[0], next = LEVEL_TIERS[1];
+  for (let i = 0; i < LEVEL_TIERS.length; i++) { if (xp >= LEVEL_TIERS[i].min) { current = LEVEL_TIERS[i]; next = LEVEL_TIERS[i + 1] || null; } }
+  return { name: current.name, next: next, progress: next ? (xp - current.min) / (next.min - current.min) : 1, xpToNext: next ? next.min - xp : 0 };
+}
+function totalModuleCount() { return Object.values(state.courses).reduce((sum, c) => sum + c.modules.length, 0); }
+function flatModules() {
+  const flat = [];
+  Object.keys(state.courses).forEach(cid => { state.courses[cid].modules.forEach(m => flat.push({ ...m, courseId: cid, courseTitle: state.courses[cid].title })); });
+  return flat;
+}
+function findNextModule() {
+  const flat = visibleFlatModules();
+  return flat.find(m => !state.progressMap[m.id] || !state.progressMap[m.id].mission_done) || null;
+}
+
+function render() {
+  const el = document.getElementById("app-shell");
+  el.innerHTML = "";
+  if (state.screen === "loading") { el.appendChild(renderLoading()); return; }
+  if (state.screen === "login") { el.appendChild(renderLogin()); return; }
+  if (state.screen === "concept" || state.screen === "quiz" || state.screen === "mission") { el.appendChild(renderLesson()); return; }
+  if (state.screen === "discussion") { el.appendChild(renderDiscussion()); return; }
+  if (state.activeTab === "home") el.appendChild(renderHome());
+  else if (state.activeTab === "feed") el.appendChild(renderFeed());
+  else if (state.activeTab === "journey") el.appendChild(renderJourney());
+  else if (state.activeTab === "badges") el.appendChild(renderBadges());
+  else if (state.activeTab === "ranks") el.appendChild(renderRanks());
+  else if (state.activeTab === "saved") el.appendChild(renderSaved());
+  el.appendChild(renderTabbar());
+}
+
+function renderLoading() {
+  const wrap = document.createElement("div"); wrap.className = "screen center-text"; wrap.style.justifyContent = "center";
+  wrap.innerHTML = '<p class="empty">Loading...</p>'; return wrap;
+}
+
+function buildInstallBanner() {
+  if (isStandalone()) return null;
+  const wrap = document.createElement("div"); wrap.style.cssText = "margin-bottom:14px;";
+  const installBtn = document.createElement("button"); installBtn.className = "install-full-btn";
+  installBtn.innerHTML = "📲 Install app";
+  installBtn.onclick = async () => {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+    } else if (isIOS()) {
+      alert('To install: tap the Share icon in your browser, then choose "Add to Home Screen".');
+    } else {
+      const ua = navigator.userAgent.toLowerCase();
+      const supportsInstall = /chrome|edg/.test(ua) && !/firefox/.test(ua);
+      if (supportsInstall) {
+        alert('To install: open your browser menu (usually ⋮ or ••• in the top corner) and look for "Install app" or "Add to Home screen" / "Add to phone".');
+      } else {
+        alert("This browser doesn't support installing web apps. Try opening this page in Chrome or Edge instead, both support installing it as a proper app.");
+      }
+    }
+  };
+  wrap.appendChild(installBtn);
+  return wrap;
+}
+
+function renderLogin() {
+  const wrap = document.createElement("div");
+  const login = document.createElement("div"); login.className = "login-wrap";
+  login.innerHTML = `
+    <img src="${LOGO}" alt="${BRAND_NAME}" style="display:block; max-width:150px; margin:0 auto 16px;">
+    <h1 style="text-align:center;">${BRAND_NAME}</h1>
+  `;
+  const loginBanner = buildInstallBanner();
+  if (loginBanner) login.appendChild(loginBanner);
+
+  if (state.loginStep === "code") {
+    const sub = document.createElement("p"); sub.style.cssText = "text-align:center; color:var(--ink-soft); font-size:14px; margin-bottom:20px;";
+    sub.textContent = `Enter the code sent to ${state.pendingEmail}`;
+    login.appendChild(sub);
+    const codeInput = document.createElement("input"); codeInput.type = "text"; codeInput.inputMode = "numeric"; codeInput.maxLength = 10;
+    codeInput.placeholder = "123456"; codeInput.style.cssText += "text-align:center; letter-spacing:4px; font-size:18px;";
+    login.appendChild(codeInput);
+    const verifyBtn = document.createElement("button"); verifyBtn.className = "primary-btn"; verifyBtn.style.marginTop = "0"; verifyBtn.textContent = "Verify code";
+    verifyBtn.onclick = () => verifyLoginCode(codeInput.value);
+    login.appendChild(verifyBtn);
+    const backBtn = document.createElement("button"); backBtn.className = "secondary-btn"; backBtn.textContent = "Use a different email";
+    backBtn.onclick = () => { state.loginStep = "email"; state.loginStatus = ""; render(); };
+    login.appendChild(backBtn);
+  } else {
+    const sub = document.createElement("p"); sub.style.cssText = "text-align:center; color:var(--ink-soft); font-size:14px; margin-bottom:20px;";
+    sub.textContent = "Enter your email to sign in";
+    login.appendChild(sub);
+    const input = document.createElement("input"); input.type = "email"; input.placeholder = "you@company.com";
+    login.appendChild(input);
+    const btn = document.createElement("button"); btn.className = "primary-btn"; btn.style.marginTop = "0"; btn.textContent = "Send sign in code";
+    btn.onclick = () => { if (input.value) sendLoginCode(input.value); };
+    login.appendChild(btn);
+  }
+
+  if (state.loginStatus) { const status = document.createElement("p"); status.className = "status-text"; status.textContent = state.loginStatus; login.appendChild(status); }
+  wrap.appendChild(login); return wrap;
+}
+
+function topStats() {
+  const wrap = document.createElement("div"); wrap.className = "topbar";
+  const xp = computeXP();
+  wrap.innerHTML = `
+    <img src="${LOGO}" alt="" style="height:22px;width:auto;">
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="pill pill-streak">\u{1F525} ${state.streak}</span>
+      <span class="pill pill-xp">⚡ ${xp} XP</span>
+    </div>
+  `;
+  const container = document.createElement("div");
+  container.appendChild(wrap);
+  const row = document.createElement("div"); row.style.cssText = "padding:0 20px 8px; display:flex; justify-content:flex-end;";
+  const signOutBtn = document.createElement("button"); signOutBtn.className = "mode-link";
+  signOutBtn.textContent = "Sign out";
+  signOutBtn.onclick = async () => { await sb.auth.signOut(); state.screen = "login"; state.user = null; alreadyLoaded = false; render(); };
+  row.appendChild(signOutBtn);
+  container.appendChild(row);
+  return container;
+}
+
+function renderHome() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+
+  const homeBanner = buildInstallBanner();
+  if (homeBanner) screen.appendChild(homeBanner);
+
+  const searchWrap = document.createElement("div"); searchWrap.style.cssText = "position:relative; margin-bottom:14px;";
+  const searchInput = document.createElement("input");
+  searchInput.placeholder = "🔍 Search lessons and courses";
+  searchInput.style.cssText = "width:100%; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); border-radius:12px; padding:11px 14px; font-size:13px;";
+  const resultsBox = document.createElement("div"); resultsBox.style.cssText = "position:absolute; top:44px; left:0; right:0; background:var(--surface-2); border:1px solid var(--line); border-radius:12px; z-index:5; max-height:240px; overflow-y:auto; display:none;";
+  searchInput.oninput = () => {
+    const q = searchInput.value.trim().toLowerCase();
+    resultsBox.innerHTML = "";
+    if (!q) { resultsBox.style.display = "none"; return; }
+    const matches = visibleFlatModules().filter(m => m.title.toLowerCase().includes(q) || m.courseTitle.toLowerCase().includes(q));
+    if (matches.length === 0) { resultsBox.innerHTML = '<p class="empty" style="padding:12px;">No matches</p>'; resultsBox.style.display = "block"; return; }
+    matches.slice(0, 8).forEach(m => {
+      const row = document.createElement("div"); row.style.cssText = "padding:10px 14px; cursor:pointer; border-bottom:1px solid var(--line); font-size:13px;";
+      row.innerHTML = `<strong>${m.title}</strong><br><span style="font-size:11px;color:var(--ink-soft);">${m.courseTitle}</span>`;
+      row.onclick = () => {
+        searchInput.value = ""; resultsBox.style.display = "none";
+        const flat = visibleFlatModules(); const idx = flat.findIndex(fm => fm.id === m.id);
+        if (isModuleUnlocked(idx, flat)) openModule(m.courseId, m);
+        else alert("This lesson isn't unlocked yet, finish what's due first and come back tomorrow.");
+      };
+      resultsBox.appendChild(row);
+    });
+    resultsBox.style.display = "block";
+  };
+  searchWrap.appendChild(searchInput); searchWrap.appendChild(resultsBox);
+  screen.appendChild(searchWrap);
+
+  const savedLink = document.createElement("button"); savedLink.className = "mode-link"; savedLink.style.cssText = "margin-bottom:14px; display:block;";
+  savedLink.textContent = "🔖 Saved lessons";
+  savedLink.onclick = () => { state.activeTab = "saved"; render(); };
+  screen.appendChild(savedLink);
+
+  const xp = computeXP(); const li = levelInfo(xp);
+  const levelCard = document.createElement("div"); levelCard.className = "level-card";
+  levelCard.innerHTML = `
+    <div class="level-row"><span style="font-size:13px;font-weight:700;">${li.name}</span><span style="font-size:12px;color:var(--ink-soft);">${li.next ? li.xpToNext + " XP to " + li.next.name : "Max level"}</span></div>
+    <div class="level-track"><div class="level-fill" style="width:${Math.round(li.progress * 100)}%;"></div></div>
+  `;
+  screen.appendChild(levelCard);
+
+  const next = findNextModule();
+  if (next) {
+    const flat = visibleFlatModules(); const dayNum = flat.findIndex(m => m.id === next.id) + 1;
+    const unlocked = isModuleUnlocked(dayNum - 1, flat);
+    const hero = document.createElement("div"); hero.className = "hero-card";
+    if (unlocked) {
+      hero.onclick = () => openModule(next.courseId, next);
+      hero.innerHTML = `<div class="hicon">⚡</div><p style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.75; margin:0 0 2px;">Day ${dayNum} &middot; ${next.courseTitle}</p><h3>${next.title}</h3><div class="meta"><span>&#9200; ${next.readTime || ""}</span><span>+150 XP</span></div>`;
+    } else {
+      hero.style.cursor = "default"; hero.style.opacity = "0.6";
+      hero.innerHTML = `<div class="hicon">🔒</div><p style="font-size:11px; font-weight:700; text-transform:uppercase; opacity:0.75; margin:0 0 2px;">Day ${dayNum} &middot; ${next.courseTitle}</p><h3>${next.title}</h3><div class="meta"><span>Unlocks tomorrow, come back to keep your streak going</span></div>`;
+    }
+    screen.appendChild(hero);
+  } else { screen.innerHTML += '<p class="empty">All caught up. New content coming soon.</p>'; }
+
+  const h = document.createElement("h2"); h.textContent = "Your courses"; h.style.marginTop = "6px"; screen.appendChild(h);
+  const courseIds = visibleCourseIds();
+  if (courseIds.length === 0) { screen.innerHTML += '<p class="empty">Nothing assigned to you yet, check with your admin.</p>'; }
+  courseIds.forEach(id => {
+    const course = state.courses[id];
+    const doneCount = course.modules.filter(m => state.progressMap[m.id] && state.progressMap[m.id].mission_done).length;
+    const pct = Math.round((doneCount / course.modules.length) * 100);
+    const card = document.createElement("div"); card.className = "course-card"; card.onclick = () => { state.activeTab = "journey"; render(); };
+    card.innerHTML = `<div class="icon-circle">${course.icon || ""}</div><div style="flex:1;"><p class="title">${course.title}</p><p class="sub">${doneCount} of ${course.modules.length} complete</p><div class="mini-track"><div class="mini-fill" style="width:${pct}%;"></div></div></div>`;
+    screen.appendChild(card);
+  });
+  wrap.appendChild(screen); return wrap;
+}
+
+function renderFeed() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+  screen.innerHTML = `<h1>Pulse Feed</h1><p class="subtitle">Best practices from the field, shared in 30 seconds</p>`;
+
+  const compose = document.createElement("div"); compose.className = "compose-card";
+  const input = document.createElement("input"); input.placeholder = "What worked for me today...";
+  input.oninput = e => { state.feedDraft = e.target.value; };
+  compose.appendChild(input);
+  const shareBtn = document.createElement("button"); shareBtn.textContent = "SHARE";
+  shareBtn.onclick = () => postToFeed(input.value);
+  compose.appendChild(shareBtn);
+  screen.appendChild(compose);
+
+  const filters = document.createElement("div"); filters.className = "filter-scroll";
+  const categories = ["all", ...Object.keys(state.courses)];
+  categories.forEach(cid => {
+    const chip = document.createElement("div");
+    chip.className = "filter-chip" + (state.feedFilter === cid ? " active" : "");
+    chip.textContent = cid === "all" ? "All Posts" : state.courses[cid].title;
+    chip.onclick = () => { state.feedFilter = cid; render(); };
+    filters.appendChild(chip);
+  });
+  screen.appendChild(filters);
+
+  const listWrap = document.createElement("div"); listWrap.innerHTML = '<p class="empty">Loading...</p>';
+  screen.appendChild(listWrap);
+  loadFeed().then(() => {
+    listWrap.innerHTML = "";
+    const filtered = state.feedPosts.filter(p => state.feedFilter === "all" || p.course_id === state.feedFilter);
+    if (filtered.length === 0) { listWrap.innerHTML = '<p class="empty">No posts in this category yet. Be the first to share!</p>'; return; }
+    filtered.forEach(p => {
+      const name = (p.profiles && (p.profiles.full_name || p.profiles.email.split("@")[0])) || "Learner";
+      const isMe = p.user_id === state.user.id;
+      const card = document.createElement("div"); card.className = "post-card";
+      card.innerHTML = `<div class="post-head"><div class="post-avatar">${name.slice(0,2).toUpperCase()}</div><span class="post-name">${isMe ? "You" : name}</span></div><p class="post-text">${p.content}</p>`;
+      const like = document.createElement("button"); like.className = "like-btn"; like.innerHTML = `👍 ${p.likes_count || 0}`;
+      like.onclick = () => likePost(p);
+      card.appendChild(like);
+      listWrap.appendChild(card);
+    });
+  });
+  wrap.appendChild(screen); return wrap;
+}
+
+function renderJourney() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+  screen.innerHTML = `<h1>Your Journey</h1><p class="subtitle">${visibleFlatModules().length}-day microlearning programme</p>`;
+
+  const flat = visibleFlatModules();
+  const dayHeads = ["M","T","W","T","F","S","S"];
+  const cal = document.createElement("div"); cal.className = "cal-grid";
+  dayHeads.forEach(d => { const h = document.createElement("div"); h.className = "cal-head"; h.textContent = d; cal.appendChild(h); });
+  let doneSoFar = 0;
+  flat.forEach((m) => { if (state.progressMap[m.id] && state.progressMap[m.id].mission_done) doneSoFar++; });
+  for (let i = 0; i < flat.length && i < 14; i++) {
+    const cell = document.createElement("div");
+    const isDone = state.progressMap[flat[i].id] && state.progressMap[flat[i].id].mission_done;
+    const isCurrent = !isDone && i === doneSoFar;
+    cell.className = "cal-cell lesson" + (isCurrent ? " today" : "");
+    cell.innerHTML = isDone ? "✓" : `Day ${i + 1}`;
+    cal.appendChild(cell);
+  }
+  screen.appendChild(cal);
+
+  let reachedCurrent = false;
+  flat.forEach((m, i) => {
+    const progress = state.progressMap[m.id];
+    const isDone = progress && progress.mission_done;
+    const isNext = !isDone && !reachedCurrent;
+    if (isNext) reachedCurrent = true;
+    const unlocked = isNext && isModuleUnlocked(i, flat);
+    const row = document.createElement("div");
+    row.className = "journey-row " + (isDone ? "done" : unlocked ? "current" : "locked");
+    if (unlocked) row.onclick = () => openModule(m.courseId, m);
+    const subline = isDone ? `&#9200; ${m.readTime || ""} &nbsp; ⚡ +150 XP`
+      : isNext && !unlocked ? "🔒 Unlocks tomorrow"
+      : `&#9200; ${m.readTime || ""} &nbsp; ⚡ +150 XP`;
+    row.innerHTML = `<div class="journey-dot">${isDone ? "✓" : i + 1}</div><div style="flex:1;"><p style="font-size:14px; font-weight:700; margin:0 0 2px;">${m.title}</p><p style="font-size:11px; color:var(--ink-soft); margin:0;">${subline}</p></div>`;
+    screen.appendChild(row);
+  });
+  wrap.appendChild(screen); return wrap;
+}
+
+function renderBadges() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+  const xp = computeXP(); const li = levelInfo(xp);
+  screen.innerHTML = `<h1>Achievements</h1><p class="subtitle">Loading...</p>`;
+  wrap.appendChild(screen);
+
+  Promise.all([loadAchievements(), loadMyDiscussionCount()]).then(() => {
+    screen.innerHTML = "";
+    const earnedCount = state.achievements.filter(a => achievementEarned(a)).length;
+    screen.innerHTML = `<h1>Achievements</h1><p class="subtitle">${earnedCount} of ${state.achievements.length} unlocked</p>`;
+
+    const levelCard = document.createElement("div"); levelCard.className = "level-card";
+    levelCard.innerHTML = `<div class="level-row"><span style="font-size:13px;font-weight:700;">Current level: ${li.name}</span></div><div class="level-track"><div class="level-fill" style="width:${Math.round(li.progress*100)}%;"></div></div><p style="font-size:11px; color:var(--ink-soft); margin:6px 0 0;">${li.next ? li.next.name + " in " + li.xpToNext + " XP" : "Top level reached"}</p>`;
+    screen.appendChild(levelCard);
+
+    const quizzesDone = Object.values(state.progressMap).filter(m => m.selected_index !== undefined && m.selected_index !== null).length;
+    const missionsDone = Object.values(state.progressMap).filter(m => m.mission_done).length;
+    const statGrid = document.createElement("div"); statGrid.className = "stat-grid";
+    statGrid.innerHTML = `
+      <div class="stat-tile"><p class="slabel">⚡ Pulse Points</p><p class="sval">${xp}</p></div>
+      <div class="stat-tile"><p class="slabel">🔥 Best Streak</p><p class="sval">${state.longestStreak} days</p></div>
+      <div class="stat-tile"><p class="slabel">📖 Lessons Done</p><p class="sval">${quizzesDone}/${totalModuleCount()}</p></div>
+      <div class="stat-tile"><p class="slabel">🎯 Missions</p><p class="sval">${missionsDone}</p></div>
+    `;
+    screen.appendChild(statGrid);
+
+    const h = document.createElement("h2"); h.textContent = "Badge collection"; screen.appendChild(h);
+    if (state.achievements.length === 0) {
+      const p = document.createElement("p"); p.className = "empty"; p.textContent = "No achievements set up yet, ask your admin to add some."; screen.appendChild(p);
+    }
+    const grid = document.createElement("div"); grid.className = "badge-grid";
+    state.achievements.forEach(a => {
+      const earned = achievementEarned(a);
+      const tile = document.createElement("div"); tile.className = "badge-tile" + (earned ? "" : " locked");
+      tile.innerHTML = `<div class="bicon">${a.icon || "🏅"}</div><p class="bname">${a.name}</p><p class="bdesc">${a.description || ""}</p>`;
+      grid.appendChild(tile);
+    });
+    screen.appendChild(grid);
+  });
+
+  return wrap;
+}
+
+async function loadMyTeammateIds() {
+  if (!state.userGroupIds || state.userGroupIds.length === 0) { state.teammateIds = new Set([state.user.id]); return; }
+  const { data } = await sb.from("group_members").select("user_id").in("group_id", state.userGroupIds);
+  const ids = new Set((data || []).map(r => r.user_id));
+  ids.add(state.user.id);
+  state.teammateIds = ids;
+}
+
+function renderRanks() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+  screen.innerHTML = `<h1>Leaderboard</h1><p class="subtitle">Compete, climb, find your rhythm</p>`;
+
+  const courseChips = document.createElement("div"); courseChips.className = "filter-scroll";
+  const chipDefs = [["overall", "Overall"], ...Object.keys(state.courses).map(id => [id, state.courses[id].title])];
+  chipDefs.forEach(([id, label]) => {
+    const chip = document.createElement("div"); chip.className = "filter-chip" + (state.lbCourseFilter === id ? " active" : "");
+    chip.textContent = label; chip.onclick = () => { state.lbCourseFilter = id; render(); };
+    courseChips.appendChild(chip);
+  });
+  screen.appendChild(courseChips);
+
+  const toggle = document.createElement("div"); toggle.className = "lb-toggle";
+  ["individuals", "team"].forEach(m => {
+    const b = document.createElement("button"); b.className = state.lbMode === m ? "active" : "";
+    b.textContent = m === "individuals" ? "⚡ Everyone" : "My team";
+    b.onclick = () => { state.lbMode = m; render(); };
+    toggle.appendChild(b);
+  });
+  screen.appendChild(toggle);
+
+  const listWrap = document.createElement("div"); listWrap.innerHTML = '<p class="empty">Loading...</p>';
+  screen.appendChild(listWrap);
+  Promise.all([loadLeaderboard(), loadMyTeammateIds()]).then(() => {
+    listWrap.innerHTML = "";
+    let rows = state.leaderboard;
+    if (state.lbMode === "team") rows = rows.filter(p => state.teammateIds.has(p.user_id));
+    if (rows.length === 0) { listWrap.innerHTML = state.lbMode === "team" ? '<p class="empty">You\'re not in a group yet, ask your admin to add you to one.</p>' : '<p class="empty">No activity yet.</p>'; return; }
+    rows.forEach((person, i) => {
+      const isMe = person.user_id === state.user.id;
+      const row = document.createElement("div"); row.className = "lb-row" + (isMe ? " me" : "");
+      const initials = (person.display_name || "?").slice(0, 2).toUpperCase();
+      row.innerHTML = `<span class="lb-rank">${i + 1}</span><div class="lb-avatar">${initials}</div><div style="flex:1;"><p class="lb-name">${isMe ? "You" : person.display_name}</p><p class="lb-sub">Trial Participant</p></div><span class="lb-score">${person.modules_completed * 100}</span>`;
+      listWrap.appendChild(row);
+    });
+  });
+  wrap.appendChild(screen); return wrap;
+}
+
+function openModule(courseId, mod) {
+  state.courseId = courseId;
+  state.moduleIndex = state.courses[courseId].modules.findIndex(m => m.id === mod.id);
+  state.answered = false; state.selected = null; state.missionText = "";
+  state.screen = "concept"; render();
+}
+
+function makeLessonTop(dayNum) {
+  const top = document.createElement("div"); top.className = "topbar";
+  const back = document.createElement("button"); back.className = "icon-btn"; back.innerHTML = "&#8592;";
+  back.onclick = () => { state.screen = "home"; render(); };
+  top.appendChild(back);
+  const lab = document.createElement("span"); lab.className = "label"; lab.textContent = `Day ${dayNum}`;
+  top.appendChild(lab); top.appendChild(document.createElement("span"));
+  return top;
+}
+
+function renderLesson() {
+  const wrap = document.createElement("div");
+  const course = state.courses[state.courseId];
+  const mod = course.modules[state.moduleIndex];
+  const flat = flatModules();
+  const dayNum = flat.findIndex(m => m.id === mod.id) + 1;
+  wrap.appendChild(makeLessonTop(dayNum));
+  const screen = document.createElement("div"); screen.className = "screen";
+  const eyebrow = document.createElement("p"); eyebrow.className = "eyebrow"; eyebrow.textContent = course.title; screen.appendChild(eyebrow);
+  const h = document.createElement("h1"); h.textContent = mod.title; screen.appendChild(h);
+
+  if (state.screen === "concept") {
+    const hero = document.createElement("div"); hero.className = "hero-card"; hero.style.cursor = "default";
+    hero.innerHTML = `<div class="hicon">⚡</div><h3>${mod.title}</h3><div class="meta"><span>&#9200; ${mod.readTime || ""}</span><span>+100 XP</span></div>`;
+    screen.appendChild(hero);
+    const isSaved = state.progressMap[mod.id] && state.progressMap[mod.id].saved;
+    const saveBtn = document.createElement("button"); saveBtn.className = "secondary-btn"; saveBtn.style.marginTop = "0"; saveBtn.style.marginBottom = "12px";
+    saveBtn.textContent = isSaved ? "🔖 Saved, tap to remove" : "🔖 Save for later";
+    saveBtn.onclick = () => toggleSaved(mod.id);
+    screen.appendChild(saveBtn);
+    const card = document.createElement("div"); card.className = "card";
+    card.innerHTML = `<div class="card-label">🧠 Concept</div><p>${mod.read}</p>`;
+    screen.appendChild(card);
+    const btn = document.createElement("button"); btn.className = "primary-btn"; btn.textContent = "Start Pulse Check";
+    btn.onclick = () => { state.screen = "quiz"; render(); };
+    screen.appendChild(btn);
+  } else if (state.screen === "quiz") {
+    const qlabel = document.createElement("p"); qlabel.className = "eyebrow"; qlabel.style.marginBottom = "10px"; qlabel.textContent = "Pulse check"; screen.appendChild(qlabel);
+    const qtext = document.createElement("p"); qtext.style.cssText = "font-size:15px;font-weight:600;margin:0 0 14px;"; qtext.textContent = mod.quiz.question; screen.appendChild(qtext);
+    const qtype = mod.quiz.type || "multiple_choice";
+    if (qtype === "multi_select") renderMultiSelectQuiz(screen, mod);
+    else if (qtype === "match") renderMatchQuiz(screen, mod);
+    else renderSingleAnswerQuiz(screen, mod); // covers multiple_choice and true_false
+  } else if (state.screen === "mission") {
+    const existing = state.progressMap[mod.id];
+    const missionDone = existing && existing.mission_done;
+    const mission = document.createElement("div"); mission.className = "mission-card";
+    mission.innerHTML = `<div class="card-label"><span>🎯 Real-world mission</span><span>+50 XP</span></div><p>${mod.tip}</p>`;
+    const textarea = document.createElement("textarea"); textarea.placeholder = "How did it go?";
+    textarea.value = existing && existing.mission_reflection ? existing.mission_reflection : "";
+    textarea.disabled = !!missionDone;
+    textarea.oninput = e => { state.missionText = e.target.value; };
+    mission.appendChild(textarea); screen.appendChild(mission);
+    const isLast = dayNum === flat.length;
+    const btn = document.createElement("button"); btn.className = "primary-btn";
+    btn.textContent = missionDone ? (isLast ? "Finish" : "Next Pulse →") : "Submit mission";
+    btn.onclick = async () => {
+      if (!missionDone) { await saveMission(mod.id, state.missionText || textarea.value); render(); return; }
+      if (isLast) { state.screen = "complete"; render(); return; }
+      const next = flat[dayNum]; openModule(next.courseId, next);
+    };
+    screen.appendChild(btn);
+    const discussBtn = document.createElement("button"); discussBtn.className = "secondary-btn"; discussBtn.textContent = "💬 Discuss this lesson";
+    discussBtn.onclick = () => { state.discussionModuleId = mod.id; state.discussionCourseId = state.courseId; state.discussionModTitle = mod.title; state.screen = "discussion"; render(); };
+    screen.appendChild(discussBtn);
+    const skip = document.createElement("button"); skip.className = "secondary-btn"; skip.textContent = "Back to dashboard";
+    skip.onclick = () => { state.screen = "home"; render(); };
+    screen.appendChild(skip);
+  }
+  wrap.appendChild(screen); return wrap;
+}
+
+function renderSingleAnswerQuiz(screen, mod) {
+  const options = mod.quiz.options && mod.quiz.options.length ? mod.quiz.options : (mod.quiz.type === "true_false" ? ["True", "False"] : []);
+  const existing = state.progressMap[mod.id];
+  const previouslyCompleted = existing && existing.selected_index !== undefined && existing.selected_index !== null;
+  const alreadyAnswered = state.answered;
+  const selectedIdx = state.selected;
+  if (previouslyCompleted && !state.answered) {
+    const note = document.createElement("p"); note.className = "subtitle"; note.style.marginBottom = "8px";
+    note.textContent = "You've completed this before, feel free to retake it.";
+    screen.appendChild(note);
+  }
+  options.forEach((opt, i) => {
+    const btn = document.createElement("button"); btn.className = "option-btn"; btn.textContent = opt;
+    if (alreadyAnswered) { btn.disabled = true; if (i === mod.quiz.correct) btn.classList.add("correct"); else if (i === selectedIdx) btn.classList.add("incorrect"); }
+    btn.onclick = async () => { state.selected = i; state.answered = true; render(); await saveQuizAnswer(mod.id, i, i === mod.quiz.correct); };
+    screen.appendChild(btn);
+  });
+  const cont = document.createElement("button"); cont.className = "primary-btn"; cont.textContent = "Continue to mission"; cont.disabled = !alreadyAnswered;
+  cont.onclick = () => { state.screen = "mission"; render(); };
+  screen.appendChild(cont);
+}
+
+function renderMultiSelectQuiz(screen, mod) {
+  const options = mod.quiz.options || [];
+  const correctSet = new Set(mod.quiz.correctIndices || []);
+  const existing = state.progressMap[mod.id];
+  const previouslyCompleted = existing && existing.selected_index !== undefined && existing.selected_index !== null;
+  const alreadyAnswered = state.answered;
+  if (!state.multiSelectChoices || state._multiSelectModId !== mod.id) {
+    state._multiSelectModId = mod.id;
+    state.multiSelectChoices = options.map(() => false);
+  }
+  if (previouslyCompleted && !state.answered) {
+    const note = document.createElement("p"); note.className = "subtitle"; note.style.marginBottom = "8px";
+    note.textContent = "You've completed this before, feel free to retake it.";
+    screen.appendChild(note);
+  }
+  const hint = document.createElement("p"); hint.className = "subtitle"; hint.style.marginBottom = "6px"; hint.textContent = "Select all that apply";
+  screen.appendChild(hint);
+  options.forEach((opt, i) => {
+    const btn = document.createElement("button"); btn.className = "option-btn"; btn.textContent = (state.multiSelectChoices[i] ? "☑ " : "☐ ") + opt;
+    if (alreadyAnswered) { btn.disabled = true; if (correctSet.has(i)) btn.classList.add("correct"); else if (state.multiSelectChoices[i]) btn.classList.add("incorrect"); }
+    else { btn.onclick = () => { state.multiSelectChoices[i] = !state.multiSelectChoices[i]; render(); }; }
+    screen.appendChild(btn);
+  });
+  if (!alreadyAnswered) {
+    const submit = document.createElement("button"); submit.className = "primary-btn"; submit.textContent = "Submit answer";
+    submit.onclick = async () => {
+      const mask = state.multiSelectChoices.reduce((m, checked, i) => checked ? (m | (1 << i)) : m, 0);
+      const correctMask = (mod.quiz.correctIndices || []).reduce((m, i) => m | (1 << i), 0);
+      state.answered = true; state.selected = mask; render();
+      await saveQuizAnswer(mod.id, mask, mask === correctMask);
+    };
+    screen.appendChild(submit);
+  } else {
+    const cont = document.createElement("button"); cont.className = "primary-btn"; cont.textContent = "Continue to mission";
+    cont.onclick = () => { state.screen = "mission"; render(); };
+    screen.appendChild(cont);
+  }
+}
+
+function renderMatchQuiz(screen, mod) {
+  const pairs = mod.quiz.pairs || [];
+  const existing = state.progressMap[mod.id];
+  const previouslyCompleted = existing && existing.correct !== undefined && existing.correct !== null && existing.selected_index !== undefined;
+  const alreadyAnswered = state.answered;
+  if (!state._matchModId || state._matchModId !== mod.id) {
+    state._matchModId = mod.id;
+    state._matchRight = pairs.map((p, i) => ({ text: p.right, originalIndex: i })).sort(() => Math.random() - 0.5);
+    state._matchSelectedLeft = null;
+    state._matchMatched = {}; // leftIndex -> true if correctly matched
+    state._matchWrongFlash = null;
+  }
+  if (previouslyCompleted && !state.answered) {
+    const note = document.createElement("p"); note.className = "subtitle"; note.style.marginBottom = "8px";
+    note.textContent = "You've completed this before, feel free to retake it.";
+    screen.appendChild(note);
+  }
+  const hint = document.createElement("p"); hint.className = "subtitle"; hint.style.marginBottom = "10px"; hint.textContent = "Tap a term, then tap its match";
+  screen.appendChild(hint);
+  const row = document.createElement("div"); row.style.cssText = "display:flex; gap:10px;";
+  const leftCol = document.createElement("div"); leftCol.style.cssText = "flex:1; display:flex; flex-direction:column; gap:8px;";
+  const rightCol = document.createElement("div"); rightCol.style.cssText = "flex:1; display:flex; flex-direction:column; gap:8px;";
+  pairs.forEach((p, i) => {
+    const btn = document.createElement("button"); btn.className = "option-btn"; btn.textContent = p.left; btn.style.fontSize = "12.5px";
+    if (state._matchMatched[i]) btn.classList.add("correct");
+    if (state._matchSelectedLeft === i) btn.style.borderColor = "var(--accent)";
+    btn.disabled = !!state._matchMatched[i] || alreadyAnswered;
+    btn.onclick = () => { state._matchSelectedLeft = i; render(); };
+    leftCol.appendChild(btn);
+  });
+  state._matchRight.forEach(r => {
+    const btn = document.createElement("button"); btn.className = "option-btn"; btn.textContent = r.text; btn.style.fontSize = "12.5px";
+    const isMatched = state._matchMatched[r.originalIndex];
+    if (isMatched) btn.classList.add("correct");
+    btn.disabled = isMatched || alreadyAnswered;
+    btn.onclick = async () => {
+      if (state._matchSelectedLeft === null) return;
+      if (state._matchSelectedLeft === r.originalIndex) {
+        state._matchMatched[r.originalIndex] = true; state._matchSelectedLeft = null; render();
+        if (Object.keys(state._matchMatched).length === pairs.length) {
+          state.answered = true; render();
+          await saveQuizAnswer(mod.id, 1, true);
+        }
+      } else {
+        state._matchWrongFlash = r.originalIndex; render();
+        setTimeout(() => { state._matchWrongFlash = null; state._matchSelectedLeft = null; render(); }, 500);
+      }
+    };
+    if (state._matchWrongFlash === r.originalIndex) btn.classList.add("incorrect");
+    rightCol.appendChild(btn);
+  });
+  row.appendChild(leftCol); row.appendChild(rightCol);
+  screen.appendChild(row);
+  const doneMatching = Object.keys(state._matchMatched).length === pairs.length;
+  const cont = document.createElement("button"); cont.className = "primary-btn"; cont.style.marginTop = "16px"; cont.textContent = "Continue to mission";
+  cont.disabled = !doneMatching;
+  cont.onclick = () => { state.screen = "mission"; render(); };
+  screen.appendChild(cont);
+}
+
+
+async function toggleSaved(moduleId) {
+  const existing = state.progressMap[moduleId] || {};
+  const newSaved = !existing.saved;
+  await sb.from("module_progress").upsert({ user_id: state.user.id, module_id: moduleId, saved: newSaved }, { onConflict: "user_id,module_id" });
+  state.progressMap[moduleId] = { ...existing, saved: newSaved };
+  render();
+}
+
+function renderSaved() {
+  const wrap = document.createElement("div"); wrap.className = "tab-screen-wrap"; wrap.appendChild(topStats());
+  const screen = document.createElement("div"); screen.className = "screen";
+  const back = document.createElement("button"); back.className = "mode-link"; back.style.marginBottom = "10px"; back.textContent = "← Back to home";
+  back.onclick = () => { state.activeTab = "home"; render(); };
+  screen.appendChild(back);
+  screen.innerHTML += `<h1>Saved lessons</h1><p class="subtitle">Bookmarked for later</p>`;
+  const flat = flatModules();
+  const saved = flat.filter(m => state.progressMap[m.id] && state.progressMap[m.id].saved);
+  if (saved.length === 0) { screen.innerHTML += '<p class="empty">Nothing saved yet. Tap the bookmark icon on any lesson to save it here.</p>'; }
+  saved.forEach(m => {
+    const row = document.createElement("div"); row.className = "journey-row";
+    row.style.cursor = "pointer";
+    row.onclick = () => openModule(m.courseId, m);
+    row.innerHTML = `<div class="journey-dot">🔖</div><div style="flex:1;"><p style="font-size:14px; font-weight:700; margin:0 0 2px;">${m.title}</p><p style="font-size:11px; color:var(--ink-soft); margin:0;">${m.courseTitle}</p></div>`;
+    screen.appendChild(row);
+  });
+  wrap.appendChild(screen); return wrap;
+}
+
+async function loadDiscussion(moduleId) {
+  const { data } = await sb.from("discussion_posts").select("*, profiles(full_name, email)").eq("module_id", moduleId).order("created_at", { ascending: true });
+  state.discussionPosts = data || [];
+}
+async function postDiscussion(moduleId, content, parentId) {
+  if (!content || !content.trim()) return;
+  await sb.from("discussion_posts").insert({ module_id: moduleId, user_id: state.user.id, content: content.trim(), parent_id: parentId || null });
+  state.discussionDraft = ""; state.replyDraft = {}; state.replyOpenFor = null;
+  await loadDiscussion(moduleId); render();
+}
+function renderDiscussion() {
+  const wrap = document.createElement("div");
+  const top = document.createElement("div"); top.className = "topbar";
+  const back = document.createElement("button"); back.className = "icon-btn"; back.innerHTML = "&#8592;";
+  back.onclick = () => { state.screen = "mission"; render(); };
+  top.appendChild(back);
+  const lab = document.createElement("span"); lab.className = "label"; lab.textContent = "Discussion";
+  top.appendChild(lab); top.appendChild(document.createElement("span"));
+  wrap.appendChild(top);
+  const screen = document.createElement("div"); screen.className = "screen";
+  const h = document.createElement("h1"); h.style.fontSize = "17px"; h.textContent = state.discussionModTitle || ""; screen.appendChild(h);
+  const sub = document.createElement("p"); sub.className = "subtitle"; sub.textContent = "Share what worked, ask questions, compare notes"; screen.appendChild(sub);
+
+  const compose = document.createElement("div"); compose.className = "compose-card";
+  const input = document.createElement("input"); input.placeholder = "Add to the discussion...";
+  input.oninput = e => { state.discussionDraft = e.target.value; };
+  compose.appendChild(input);
+  const postBtn = document.createElement("button"); postBtn.textContent = "POST";
+  postBtn.onclick = () => postDiscussion(state.discussionModuleId, input.value, null);
+  compose.appendChild(postBtn);
+  screen.appendChild(compose);
+
+  const listWrap = document.createElement("div"); listWrap.innerHTML = '<p class="empty">Loading...</p>';
+  screen.appendChild(listWrap);
+  loadDiscussion(state.discussionModuleId).then(() => {
+    listWrap.innerHTML = "";
+    const topLevel = state.discussionPosts.filter(p => !p.parent_id);
+    if (topLevel.length === 0) { listWrap.innerHTML = '<p class="empty">No comments yet, start the conversation.</p>'; return; }
+    topLevel.forEach(p => {
+      const name = (p.profiles && (p.profiles.full_name || p.profiles.email.split("@")[0])) || "Learner";
+      const isMe = p.user_id === state.user.id;
+      const card = document.createElement("div"); card.className = "post-card";
+      card.innerHTML = `<div class="post-head"><div class="post-avatar">${name.slice(0,2).toUpperCase()}</div><span class="post-name">${isMe ? "You" : name}</span></div><p class="post-text">${p.content}</p>`;
+      const replies = state.discussionPosts.filter(r => r.parent_id === p.id);
+      replies.forEach(r => {
+        const rname = (r.profiles && (r.profiles.full_name || r.profiles.email.split("@")[0])) || "Learner";
+        const rIsMe = r.user_id === state.user.id;
+        const rBlock = document.createElement("div"); rBlock.className = "reply-block";
+        rBlock.innerHTML = `<div class="post-head"><div class="post-avatar" style="width:20px;height:20px;font-size:9px;">${rname.slice(0,2).toUpperCase()}</div><span class="post-name" style="font-size:11.5px;">${rIsMe ? "You" : rname}</span></div><p class="post-text" style="font-size:12px;">${r.content}</p>`;
+        card.appendChild(rBlock);
+      });
+      const replyLink = document.createElement("button"); replyLink.className = "reply-link"; replyLink.style.marginTop = "6px";
+      replyLink.textContent = state.replyOpenFor === p.id ? "Cancel" : "Reply";
+      replyLink.onclick = () => { state.replyOpenFor = state.replyOpenFor === p.id ? null : p.id; render(); };
+      card.appendChild(replyLink);
+      if (state.replyOpenFor === p.id) {
+        const replyCompose = document.createElement("div"); replyCompose.className = "compose-card"; replyCompose.style.marginTop = "8px"; replyCompose.style.marginBottom = "0";
+        const rInput = document.createElement("input"); rInput.placeholder = "Write a reply...";
+        replyCompose.appendChild(rInput);
+        const rBtn = document.createElement("button"); rBtn.textContent = "POST";
+        rBtn.onclick = () => postDiscussion(state.discussionModuleId, rInput.value, p.id);
+        replyCompose.appendChild(rBtn);
+        card.appendChild(replyCompose);
+      }
+      listWrap.appendChild(card);
+    });
+  });
+
+  wrap.appendChild(screen); return wrap;
+}
+
+
+function renderTabbar() {
+  const bar = document.createElement("div"); bar.className = "tabbar";
+  const tabs = [
+    { id: "home", glyph: "&#8962;", label: "Home" },
+    { id: "feed", glyph: "&#10024;", label: "Feed" },
+    { id: "journey", glyph: "&#128506;", label: "Journey" },
+    { id: "badges", glyph: "&#127942;", label: "Badges" },
+    { id: "ranks", glyph: "&#128202;", label: "Ranks" }
+  ];
+  tabs.forEach(t => {
+    const el = document.createElement("div"); el.className = "tab" + (state.activeTab === t.id ? " active" : "");
+    el.innerHTML = `<span class="glyph">${t.glyph}</span><span>${t.label}</span>`;
+    el.onclick = () => { state.activeTab = t.id; state.screen = t.id; render(); };
+    bar.appendChild(el);
+  });
+  return bar;
+}
+
+init();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
